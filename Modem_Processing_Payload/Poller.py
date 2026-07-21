@@ -62,27 +62,18 @@ def dataProcessing():
             payload = response.json()
         except rq.exceptions.RequestException as err:
             print(f"Error: {err}")
-        except rq.exceptions.Timeout as err:
-            print(f"Error: {err}")
-        except rq.exceptions.HTTPError as err:
-            print(f"Error: {err}")
-        except rq.exceptions.ConnectionError as err:
-            print(f"Error: {err}")
         else:
+            timestamp.append(time.time())
+            for key, value in payload.items():
+                data.setdefault(key, []).append(value)
+
+            dTime.append(timestamp)
+            dData.append(data)
+
             time.sleep(5)
-            continue
-        
-        timestamp.append(time.time())
-        for key, value in payload.items():
-            data.setdefault(key, []).append(value)
-        dTime.append(timestamp)
-        dData.append(data)
 
-        print(dTime)
-        print(dData)
-
-        time.sleep(5)
-
+    print(f"timestamp: {dTime}")
+    print(f"dData: {dData}")
 
     # assigns a time/date tag to the current response param
     # saves individual response params into arrays along with the associated tag?
@@ -105,6 +96,8 @@ def main():
 
     getJSON()
     """
+
     dataProcessing()
+    
 if __name__ == "__main__":
     main()
