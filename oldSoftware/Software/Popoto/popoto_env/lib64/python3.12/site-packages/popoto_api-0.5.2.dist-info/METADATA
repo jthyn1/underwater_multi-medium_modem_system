@@ -1,0 +1,84 @@
+Metadata-Version: 2.4
+Name: popoto-api
+Version: 0.5.2
+Summary: Package containing the Popoto Modem Python API.
+Author-email: Aaron Bangs <aaron@delresearch.com>, Edgar Bangs <edgar@delresearch.com>, "James A. DellaMorte" <jamesanthony@popotomodem.com>, Jim DellaMorte <jim@delresearch.com>, Joseph DellaMorte <joseph@delresearch.com>, John DellaMorte <john@delresearch.com>
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Requires-Python: >=3.9
+Provides-Extra: all
+Requires-Dist: numpy; extra == 'all'
+Requires-Dist: progressbar; extra == 'all'
+Requires-Dist: scipy; extra == 'all'
+Provides-Extra: test
+Requires-Dist: pytest; extra == 'test'
+Description-Content-Type: text/markdown
+
+# Popoto-API
+Python implimentation of the Popoto-API
+# Installing package from gitlab
+To install the from the gitlab pypi package repository follow these steps:
+## Create an acess token
+1. Go to your gitlab profile settings
+2. Click on "Access Tokens"
+3. Create a new access token with the following scopes:
+   - `read_api`
+   - `read_repository`
+   - `read_package_registry`
+4. Copy the access token, you will need it later.
+## Create a pip configuration file
+Create a file named `pip.conf` in your home directory (e.g., `~/.pip/pip.conf` on Linux/MacOS or `%APPDATA%\pip\pip.conf` on Windows) and add the following content:
+```ini
+[global]
+index-url = https://__token__:<your_access_token>@gitlab.popotomodem.com/api/v4/projects/134/packages/pypi/simple
+```
+## Install the package
+Now you can install the package using pip:
+
+For the latest version:
+```bash
+pip install popoto-api
+```
+
+For a specific version:
+```bash
+pip install popoto-api==<version>
+```
+
+Example:
+```bash
+pip install popoto-api
+# or for a specific version
+pip install popoto-api==0.0.1+seng333.7343
+```
+## Data server CLI
+The install also provides the Popoto data server entry point:
+```bash
+popoto-data-server --listen-port 39484
+```
+# Development
+To contribute to the project, you can clone the repository and devolop locally or in the included dev container.
+## Cloning the repository
+```bash
+git clone git@gitlab.popotomodem.com:delresearch/api/pythonpopotoapi.git
+```
+## Setting up the development environment
+You can use the included dev container for development. To do this, follow these steps:
+1. Open the repository in Visual Studio Code.
+2. Install the "Dev Containers" extension if you haven't already.
+3. A notification should appear asking if you want to reopen the repository in a container. Click "Reopen in Container". **Note**: If the notification does not appear, you can manually open the command palette (Ctrl+Shift+P or Cmd+Shift+P) and select "Dev Containers: Rebuild and Reopen in Container".
+4. Wait for the container to build and start.
+   **Note**: If there are any issues with the container build, it's usually related to the mounts in the `devcontainer.json` file. Make sure you have a .ssh directory in your home directory, and a .gitconfig file in your home directory.
+5. Once the container is running, you can open a terminal in the container and run the following command to install the package in editable mode:
+```bash
+pip install -e .
+```
+### Note for commits
+When making commits, please ensure that you are putting a Jira ticket number in the commit message or that your branch name contains a Jira ticket number. This is important for tracking changes and linking them to the relevant tasks in our project management system.
+If you are working on a feature or bug fix that is not directly linked to a Jira ticket, please create a new ticket and link it to your commit. This helps maintain clarity and organization in our development process.
