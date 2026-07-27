@@ -1,0 +1,2 @@
+[console_scripts]
+popoto-data-server = popoto_data_server.pds:main
