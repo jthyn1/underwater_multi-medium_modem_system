@@ -21,8 +21,8 @@ float latitude = 0.0;
 float longitude = 0.0;
 double speed = 0.0;
 
-HardwareSerial &debugSerial = Serial8; // Output to serial port 8 (pins 34 & 35)
-//usb_serial_class &debugSerial = Serial; // Output to usb
+// HardwareSerial &debugSerial = Serial8; // Output to serial port 8 (pins 34 & 35)
+usb_serial_class &debugSerial = Serial; // Output to usb
 
 void setup() {
   // put your setup code here, to run once:
@@ -100,8 +100,8 @@ void loop() {
   debugSerial.printf("Pressure: %.2f\n", pressure);
   debugSerial.printf("Depth: %.2f\n", depth);
 
-  debugSerial.printf("Latitude: %.6f ", latitude); debugSerial.printf("%c'\n", lat);
-  debugSerial.printf("Longitude: %.6f ", longitude); debugSerial.printf("%c'\n", lon);
+  debugSerial.printf("Latitude: %.6f ", latitude); debugSerial.printf("%c\n", lat);
+  debugSerial.printf("Longitude: %.6f ", longitude); debugSerial.printf("%c\n", lon);
   debugSerial.printf("Speed: %.2f\n", speed);
   }
 
