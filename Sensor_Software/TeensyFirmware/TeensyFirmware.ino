@@ -52,7 +52,6 @@ void paramRead() {
   sensor.read();
 
   waterValue = analogRead(WATER_PIN);
-
   alti = sensor.altitude();
   temp = sensor.temperature();
   pressure = sensor.pressure();
@@ -94,6 +93,11 @@ void loop() {
   paramRead();
   GPSRead();
 
+  debugSerial.printf("%d,%.2f,%.2f,%.2f,%.2f,%.6f,%c,%.6f,%c,%.2f\n", waterValue, temp, alti, pressure, depth, latitude, lat, longitude, lon, speed);
+
+
+
+/*
   debugSerial.printf("water value: %d\n", waterValue);
   debugSerial.printf("Temperature: %.2f\n", temp);
   debugSerial.printf("Altitude: %.2f\n", alti);
@@ -103,6 +107,7 @@ void loop() {
   debugSerial.printf("Latitude: %.6f ", latitude); debugSerial.printf("%c\n", lat);
   debugSerial.printf("Longitude: %.6f ", longitude); debugSerial.printf("%c\n", lon);
   debugSerial.printf("Speed: %.2f\n", speed);
+*/
   }
 
 }
