@@ -16,7 +16,7 @@ class TelemetryPacket(Packet):
         ShortField("seq_num", 0),
         XByteField("data_type", 0),
         IntField("payload_len", 0),
-        StrLenField("payload", b"", length_from=lambda pkt: pkt.payload_len),
+        StrLenField("data_payload", b"", length_from=lambda pkt: pkt.payload_len),
     ]
 
 # Defines data parameters
@@ -36,19 +36,19 @@ class dataFormat:
 
 # Reads from teensy for sensor data
 def readTeensy(): 
-    ser = serial.Serial('/dev/ttyACM0', 115200, timeout=2)
+    ser = serial.Serial('/dev/ttyAMA0', 115200, timeout=2)
     try:
         while True:
             if ser.in_waiting > 0:
                 line = ser.readline().decode('utf-8').rstrip() # Returns a str
-                yield line
+                yield(line)
     except serial.SerialException as e:
         print(f"serial error:", {e})
     finally:
         ser.close()
 
 # Tokenizes data read from teensy and assigns it to dataFormat class
-def parse(dataLine: str) -> dataFormat:
+def parse(dataLine: str, time: int) -> dataFormat:
     tokens = dataLine.strip().split(',')
     waterVal = int(tokens[0])
     tempVal = float(tokens[1])
@@ -60,15 +60,15 @@ def parse(dataLine: str) -> dataFormat:
     lonVal = float(tokens[7])
     lonDirVal = tokens[8].encode('ascii')
     speedVal = float(tokens[9])
-    timeVal = int(tokens[10])
-    return dataFormat(waterVal, tempVal, pressureVal, altiVal, depthVal, latVal, latDirVal, lonVal, lonDirVal, speedVal)
+    timeVal = time
+    return dataFormat(waterVal, tempVal, pressureVal, altiVal, depthVal, latVal, latDirVal, lonVal, lonDirVal, speedVal, timeVal)
 
 # Struct format
 Format = '<hfffffcfcfh'
 
 # Packs data from dataFormat class into a struct
 def packetize(f: dataFormat) -> bytes:
-    return struct.pack(Format, f.waterVal, f.tempVal, f.pressureVal, f.altiVal, f.depthVal, f.latVal, f.latDirVal, f.lonVal, f.lonDirVal, f.speedVal, f.timeVal)
+    return struct.pack(Format, f.waterVal, f.tempVal, f.pressureVal, f.altiVal, f.depthVal, f.latVal, f.latDirVal, f.lonVal, f.lonDirVal, f.speedVal)
 
 # Upacks data from dataFormat struct for debugging
 # def depacketize(data: bytes) -> dataFormat:
@@ -79,17 +79,17 @@ PORT = 5555
 bind_layers(UDP, TelemetryPacket, dport=PORT)
 
 # Sends packed data to other pi ip through ethernet
-def sensorPacket(sensorData):
+def sensorPacket(sensorData, seq):
     data = b"sensor reading payload"
     pkt = (
-        Ether(dst="88:a2:9e:29:f4:74")
+        Ether(dst="AA:BB:CC:DD:EE:FF")
         / IP(src="192.168.102.100", dst="192.168.102.103")
         / UDP(sport=5000, dport=PORT)
         / TelemetryPacket(
-            seq_num=1,
+            seq_num=seq,
             data_type=0x01,
             payload_len=len(sensorData),
-            payload=sensorData,
+            data_payload=sensorData,
         )
     )
     pkt.show()
@@ -99,13 +99,15 @@ def sensorPacket(sensorData):
 
 
 def main():
+    seq = 0
     value = readTeensy()
-
+    timing = time.perf_counter()
     try:
         while True:
-            parsed = parse(next(value))
+            seq = (seq + 1) & 0xFFFF
+            parsed = parse(next(value), int(time.perf_counter() - timing))
             packetized = packetize(parsed)
-            sensorPacket(packetized)
+            sensorPacket(packetized, seq)
             # unpacked = depacketize(packetized)
             # print(unpacked)
             time.sleep(0.5)

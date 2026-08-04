@@ -22,10 +22,9 @@ char lon;
 float latitude = 0.0;
 float longitude = 0.0;
 double speed = 0.0;
-int timePassed = 0;
 
-// HardwareSerial &debugSerial = Serial8; // Output to serial port 8 (pins 34 & 35)
- usb_serial_class &debugSerial = Serial; // Output to usb
+HardwareSerial &debugSerial = Serial8; // Output to serial port 8 (pins 34 & 35)
+// usb_serial_class &debugSerial = Serial; // Output to usb
 
 
 void setup() {
@@ -88,15 +87,15 @@ void GPSRead() {
 
 void loop() {
 
+ GPSRead();
+
  if (millis() - lastRead >= sampleRate) {
   lastRead = millis();
-  timePassed = millis()/1000;
 
   paramRead();
-  GPSRead();
   
-  debugSerial.printf("%d,%.2f,%.2f,%.2f,%.2f,%.6f,%c,%.6f,%c,%.2f,%d", waterValue, temp, alti, 
-  pressure, depth, latitude, lat, longitude, lon, speed, timePassed);
+  debugSerial.printf("%d,%.2f,%.2f,%.2f,%.2f,%.6f,%c,%.6f,%c,%.2f\n", waterValue, temp, alti, 
+  pressure, depth, latitude, lat, longitude, lon, speed);
 
 
 
