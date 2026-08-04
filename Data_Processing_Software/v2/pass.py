@@ -32,6 +32,7 @@ class dataFormat:
     lonVal: float
     lonDirVal: chr
     speedVal: float
+    timeVal: int
 
 # Reads from teensy for sensor data
 def readTeensy(): 
@@ -59,14 +60,15 @@ def parse(dataLine: str) -> dataFormat:
     lonVal = float(tokens[7])
     lonDirVal = tokens[8].encode('ascii')
     speedVal = float(tokens[9])
+    timeVal = int(tokens[10])
     return dataFormat(waterVal, tempVal, pressureVal, altiVal, depthVal, latVal, latDirVal, lonVal, lonDirVal, speedVal)
 
 # Struct format
-Format = '<hfffffcfcf'
+Format = '<hfffffcfcfh'
 
 # Packs data from dataFormat class into a struct
 def packetize(f: dataFormat) -> bytes:
-    return struct.pack(Format, f.waterVal, f.tempVal, f.pressureVal, f.altiVal, f.depthVal, f.latVal, f.latDirVal, f.lonVal, f.lonDirVal, f.speedVal)
+    return struct.pack(Format, f.waterVal, f.tempVal, f.pressureVal, f.altiVal, f.depthVal, f.latVal, f.latDirVal, f.lonVal, f.lonDirVal, f.speedVal, f.timeVal)
 
 # Upacks data from dataFormat struct for debugging
 # def depacketize(data: bytes) -> dataFormat:
@@ -80,7 +82,7 @@ bind_layers(UDP, TelemetryPacket, dport=PORT)
 def sensorPacket(sensorData):
     data = b"sensor reading payload"
     pkt = (
-        Ether(dst="AA:BB:CC:DD:EE:FF")
+        Ether(dst="88:a2:9e:29:f4:74")
         / IP(src="192.168.102.100", dst="192.168.102.103")
         / UDP(sport=5000, dport=PORT)
         / TelemetryPacket(

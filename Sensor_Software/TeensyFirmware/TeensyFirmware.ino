@@ -8,7 +8,9 @@ MS5837 sensor;
 Adafruit_GPS GPS(&GPSSerial);
 
 const int WATER_PIN = 23;
-const unsigned long sampleRate = 500;
+const int PPS_PIN = 41;
+int second = 0;
+const unsigned long sampleRate = 1000;
 unsigned long lastRead = 0;
 int waterValue = 0;
 float pressure = 0.00;
@@ -20,9 +22,11 @@ char lon;
 float latitude = 0.0;
 float longitude = 0.0;
 double speed = 0.0;
+int timePassed = 0;
 
 // HardwareSerial &debugSerial = Serial8; // Output to serial port 8 (pins 34 & 35)
-usb_serial_class &debugSerial = Serial; // Output to usb
+ usb_serial_class &debugSerial = Serial; // Output to usb
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -80,20 +84,19 @@ void GPSRead() {
     lon = GPS.lon;
     speed = GPS.speed;
   }
-
-
-
 }
 
 void loop() {
 
  if (millis() - lastRead >= sampleRate) {
   lastRead = millis();
+  timePassed = millis()/1000;
 
   paramRead();
   GPSRead();
-
-  debugSerial.printf("%d,%.2f,%.2f,%.2f,%.2f,%.6f,%c,%.6f,%c,%.2f\n", waterValue, temp, alti, pressure, depth, latitude, lat, longitude, lon, speed);
+  
+  debugSerial.printf("%d,%.2f,%.2f,%.2f,%.2f,%.6f,%c,%.6f,%c,%.2f,%d", waterValue, temp, alti, 
+  pressure, depth, latitude, lat, longitude, lon, speed, timePassed);
 
 
 
