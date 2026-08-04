@@ -24,10 +24,11 @@ class dataFormat:
     lonVal: float
     lonDirVal: chr
     speedVal: float
+    timeVal: int
 
 PORT = 5555
 bind_layers(UDP, TelemetryPacket, dport=PORT)
-Format = '<hfffffcfcf'
+Format = '<hfffffcfcfh'
 
 def depacketize(data: bytes) -> dataFormat:
     return dataFormat(*struct.unpack(Format, data))
