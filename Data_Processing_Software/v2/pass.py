@@ -68,7 +68,7 @@ Format = '<hfffffcfcfh'
 
 # Packs data from dataFormat class into a struct
 def packetize(f: dataFormat) -> bytes:
-    return struct.pack(Format, f.waterVal, f.tempVal, f.pressureVal, f.altiVal, f.depthVal, f.latVal, f.latDirVal, f.lonVal, f.lonDirVal, f.speedVal)
+    return struct.pack(Format, f.waterVal, f.tempVal, f.pressureVal, f.altiVal, f.depthVal, f.latVal, f.latDirVal, f.lonVal, f.lonDirVal, f.speedVal, f.timeVal)
 
 # Upacks data from dataFormat struct for debugging
 # def depacketize(data: bytes) -> dataFormat:

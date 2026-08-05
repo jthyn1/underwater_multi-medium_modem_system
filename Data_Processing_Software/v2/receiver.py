@@ -57,8 +57,4 @@ if __name__ == "__main__":
 #Receives the information passed through from pass.py
 #Depacketizes the information
 #passes it to Spool.py
-<<<<<<< HEAD
 #Additionally reads .json parameters from modem 2, organizes it, and sends it to spool.py
-=======
-#Additionally reads .json parameters from modem 2, organizes it, and sends it to spool.py
->>>>>>> 8089c604dd47e9a863bed194c99a1696f2ab5360
