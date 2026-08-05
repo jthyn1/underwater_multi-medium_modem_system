@@ -1,9 +1,7 @@
 #Reads /dev/tty for sensor inputs
 import serial
-import sys
 import time
 import struct
-import string
 from scapy.all import Packet, Ether, IP, UDP, ShortField, XByteField, IntField, StrLenField
 from scapy.all import bind_layers, sendp
 from collections import namedtuple
