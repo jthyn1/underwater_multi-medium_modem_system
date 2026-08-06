@@ -20,64 +20,54 @@ class TelemetryPacket(Packet):
 
 tx_queue = queue.Queue()
 
-def qSensor(q, id_q):
+# Queue sensor data
+def qSensor(q):
     while True:
-        q.put(serialparsing.serialParse())
+        q.put(serialparsing.serialMain())
         time.sleep(1)
 
-def qJSON(q, id_q):
+# Queue JSON data
+def qJSON(q):
     while True:
-        q.put(JSONparsing.JSONParse())
+        q.put(JSONparsing.JSONmain())
         time.sleep(1)
-
-
 
 # Defines port # and transmission protocol
 PORT = 5555
 bind_layers(UDP, TelemetryPacket, dport=PORT)
 
 # Sends packed data to other pi ip through ethernet
+def txProtocol():
 
-def dataType():
+    seq = 0
+
     while True:
-        data = tx_queue.get()
-        if isinstance(IDdata, serialparsing.dataFormat):
-            return SENSORS
-        elif isinstance(data, dict):
-            return OPTICALSTATUS
-        else:
-            print("Unknown data type")
-            return None
-
-def txPacket(payloadData, seq):
-    data = b"data payload"
-    pkt = (
-        Ether(dst="AA:BB:CC:DD:EE:FF") #Rx MAC address
-        / IP(src="192.168.102.100", dst="192.168.102.103")
-        / UDP(sport=5000, dport=PORT)
-        / TelemetryPacket(
-            seq_num=seq,
-            data_type=dataType(),
-            payload_len=len(payloadData),
-            data_payload=payloadData,
+        seq = (seq + 1) & 0xFFFF
+        tag, payloadData = tx_queue.get()
+        dataLabel = b"data payload"
+        pkt = (
+            Ether(dst="AA:BB:CC:DD:EE:FF") #Rx MAC address
+            / IP(src="192.168.102.100", dst="192.168.102.103")
+            / UDP(sport=5000, dport=PORT)
+            / TelemetryPacket(
+                seq_num=seq,
+                data_type=tag,
+                payload_len=len(payloadData),
+                data_payload=payloadData,
+            )
         )
-    )
-    pkt.show()
-
-    while True:
+        pkt.show()
         sendp(pkt, iface="eth0")
         tx_queue.task_done()
 
-
 def main():
-    seq = 0
+
     threading.Thread(target=qSensor, args=(tx_queue,), daemon=True).start()
     threading.Thread(target=qJSON, args=(tx_queue,), daemon=True).start()
+
     try:
         while True:
-            seq = (seq + 1) & 0xFFFF
-            payload = tx_queue.get()
-            txPacket(payload, seq)
+            txProtocol()
     except KeyboardInterrupt:
         return
 

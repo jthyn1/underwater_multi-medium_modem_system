@@ -15,12 +15,9 @@ def readJson():
         print(f"Request error: {e}")
     
 def encodeJSON(data):
-    return json.dumps(data).encode('utf-8')
+    return OPTICALSTATUS, json.dumps(data).encode('utf-8')
 
-def JSONParse():
+def JSONmain():
     value = readJson()
     encoded_data = encodeJSON(next(value))
     yield encoded_data
-
-def JSONID():
-    return "dict"

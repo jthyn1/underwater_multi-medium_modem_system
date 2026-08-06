@@ -17,17 +17,18 @@ def handle_packet(pkt):
     if TelemetryPacket not in pkt:
         return
     tp = pkt[TelemetryPacket]
-    data = bytes(tp.data_payload)
+    payload = bytes(tp.data_payload)
 
     decoder = DECODERS.get(tp.data_type)
     if decoder is None:
         print(f"seq={tp.seq_num} unknown data type: {hex(tp.data_type)}")
         return
     
-    if len(data) != decoder.size:
-        print(f"seq={tp.seq_num} bad length: received {len(data)}, expected {decoder.size}")
+    if len(payload) != decoder.size:
+        print(f"seq={tp.seq_num} bad length: received {len(payload)}, expected {decoder.size}")
         return
-    print(f"seq= {tp.seq_num}, {decoder(data)}")
+    
+    print(f"seq= {tp.seq_num}, tag= {hex(tp.data_type)}: {decoder(payload)}")
        # print(f"seq={tp.seq_num} type={hex(tp.data_type)} data_payload={tp.data_payload}")
        
 def main():
