@@ -1,14 +1,16 @@
 #include <Wire.h>
 #include "MS5837.h"
 #include <Adafruit_GPS.h>
-#define GPSSerial Serial1
+#define GPSSerial Serial7
 #define GPSECHO false
 
 MS5837 sensor;
 Adafruit_GPS GPS(&GPSSerial);
 
 const int WATER_PIN = 23;
-const unsigned long sampleRate = 500;
+const int PPS_PIN = 41;
+int second = 0;
+const unsigned long sampleRate = 1000;
 unsigned long lastRead = 0;
 int waterValue = 0;
 float pressure = 0.00;
@@ -21,20 +23,24 @@ float latitude = 0.0;
 float longitude = 0.0;
 double speed = 0.0;
 
+// HardwareSerial &debugSerial = Serial8; // Output to serial port 8 (pins 34 & 35)
+usb_serial_class &debugSerial = Serial; // Output to usb
+
+
 void setup() {
   // put your setup code here, to run once:
   pinMode(WATER_PIN, INPUT);
-  Serial.begin(115200);
+  debugSerial.begin(115200);
   delay(1000);
   Wire.begin();
   GPS.begin(9600);
 
   // BlueRobotics init error detection
   while (!sensor.init()) {
-    Serial.println("Init failed!");
-    Serial.println("Are SDA/SCL connected correctly?");
-    Serial.println("Blue Robotics Bar30: White=SDA, Green=SCL");
-    Serial.println("\n\n\n");
+    debugSerial.println("Init failed!");
+    debugSerial.println("Are SDA/SCL connected correctly?");
+    debugSerial.println("Blue Robotics Bar30: White=SDA, Green=SCL");
+    debugSerial.println("\n\n\n");
     delay(5000);
   }
 
@@ -49,7 +55,6 @@ void paramRead() {
   sensor.read();
 
   waterValue = analogRead(WATER_PIN);
-
   alti = sensor.altitude();
   temp = sensor.temperature();
   pressure = sensor.pressure();
@@ -60,7 +65,7 @@ void GPSRead() {
   char c = GPS.read();
   //from code example
   // if you want to debug, this is a good time to do it!
-  if (GPSECHO && c) Serial.print(c);
+  if (GPSECHO && c) debugSerial.print(c);
   // if a sentence is received, we can check the checksum, parse it...
   if (GPS.newNMEAreceived()) {
     // a tricky thing here is if we print the NMEA sentence, or data
@@ -78,28 +83,33 @@ void GPSRead() {
     lon = GPS.lon;
     speed = GPS.speed;
   }
-
-
-
 }
 
 void loop() {
+
+ GPSRead();
 
  if (millis() - lastRead >= sampleRate) {
   lastRead = millis();
 
   paramRead();
-  GPSRead();
+  
+  debugSerial.printf("%d,%.2f,%.2f,%.2f,%.2f,%.6f,%c,%.6f,%c,%.2f\n", waterValue, temp, alti, 
+  pressure, depth, latitude, lat, longitude, lon, speed);
 
-  Serial.printf("water value: %d\n", waterValue);
-  Serial.printf("Temperature: %.2f\n", temp);
-  Serial.printf("Altitude: %.2f\n", alti);
-  Serial.printf("Pressure: %.2f\n", pressure);
-  Serial.printf("Depth: %.2f\n", depth);
 
-  Serial.printf("Latitude: %.6f ", latitude); Serial.printf("'%c\n", lat);
-  Serial.printf("Longitude: %.6f ", longitude); Serial.printf("'%c\n", lon);
-  Serial.printf("Speed: %.2f\n", speed);
+
+/*
+  debugSerial.printf("water value: %d\n", waterValue);
+  debugSerial.printf("Temperature: %.2f\n", temp);
+  debugSerial.printf("Altitude: %.2f\n", alti);
+  debugSerial.printf("Pressure: %.2f\n", pressure);
+  debugSerial.printf("Depth: %.2f\n", depth);
+
+  debugSerial.printf("Latitude: %.6f ", latitude); debugSerial.printf("%c\n", lat);
+  debugSerial.printf("Longitude: %.6f ", longitude); debugSerial.printf("%c\n", lon);
+  debugSerial.printf("Speed: %.2f\n", speed);
+*/
   }
 
 }
