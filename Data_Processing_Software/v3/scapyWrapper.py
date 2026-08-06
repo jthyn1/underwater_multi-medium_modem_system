@@ -22,9 +22,9 @@ tx_queue = queue.Queue()
 
 # Queue sensor data
 def qSensor(q):
-    while True:
-        q.put(serialparsing.serialMain())
-        time.sleep(1)
+    reader = serialparsing.readTeensy()
+    for line in reader:
+        q.put(serialparsing.serialMain(line))
 
 # Queue JSON data
 def qJSON(q):
@@ -61,10 +61,8 @@ def txProtocol():
         tx_queue.task_done()
 
 def main():
-
     threading.Thread(target=qSensor, args=(tx_queue,), daemon=True).start()
     threading.Thread(target=qJSON, args=(tx_queue,), daemon=True).start()
-
     try:
         while True:
             txProtocol()

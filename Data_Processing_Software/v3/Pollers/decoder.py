@@ -13,8 +13,10 @@ def struct_decoder(format):
 def json_decoder(data):
     return json.loads(data.decode('utf-8'))
 
+
+
 SENSORS = 0X01
 OPTICALSTATUS = 0X02
 
-DECODERS[SENSORS] = struct_decoder('<hfffffcfcfh')
+DECODERS[SENSORS] = struct_decoder('<hfffffcfcf')
 DECODERS[OPTICALSTATUS] = json_decoder

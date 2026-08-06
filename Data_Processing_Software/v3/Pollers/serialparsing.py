@@ -18,7 +18,6 @@ class dataFormat:
     lonVal: float
     lonDirVal: chr
     speedVal: float
-    timeVal: int
 
 # Reads from teensy for sensor data
 def readTeensy(): 
@@ -27,14 +26,15 @@ def readTeensy():
         while True:
             if ser.in_waiting > 0:
                 line = ser.readline().decode('utf-8').rstrip() # Returns a str
-                return line
+                yield line
     except serial.SerialException as e:
         print(f"serial error:", {e})
     finally:
         ser.close()
 
+
 # Tokenizes data read from teensy and assigns it to dataFormat class
-def parse(dataLine: str, time: int) -> dataFormat:
+def parse(dataLine: str) -> dataFormat:
     tokens = dataLine.strip().split(',')
     waterVal = int(tokens[0])
     tempVal = float(tokens[1])
@@ -46,19 +46,16 @@ def parse(dataLine: str, time: int) -> dataFormat:
     lonVal = float(tokens[7])
     lonDirVal = tokens[8].encode('ascii')
     speedVal = float(tokens[9])
-    timeVal = time
-    return dataFormat(waterVal, tempVal, altiVal, pressureVal, depthVal, latVal, latDirVal, lonVal, lonDirVal, speedVal, timeVal)
+    return dataFormat(waterVal, tempVal, altiVal, pressureVal, depthVal, latVal, latDirVal, lonVal, lonDirVal, speedVal)
 
 # Struct format
-Format = '<hfffffcfcfh'
+Format = '<hfffffcfcf'
 
 # Packs data from dataFormat class into a struct
 def packetize(f: dataFormat) -> bytes:
     return SENSORS, struct.pack(Format, *astuple(f))
 
-def serialMain():
-    value = readTeensy()
-    timing = time.perf_counter()
-    parsed = parse(value, int(time.perf_counter() - timing))
+def serialMain(line: str) -> tuple[int, bytes]:
+    parsed = parse(line)
     sensorTag, packetized_sensor = packetize(parsed)
-    return sensorTag,packetized_sensor
+    return sensorTag, packetized_sensor
