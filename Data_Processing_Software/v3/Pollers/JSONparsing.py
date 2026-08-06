@@ -19,5 +19,5 @@ def encodeJSON(data):
 
 def JSONmain():
     value = readJson()
-    encoded_data = encodeJSON(value)
-    yield encoded_data
+    JSONtag, encoded_data = encodeJSON(value)
+    return JSONtag, encoded_data

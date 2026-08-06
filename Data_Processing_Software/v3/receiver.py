@@ -24,10 +24,6 @@ def handle_packet(pkt):
         print(f"seq={tp.seq_num} unknown data type: {hex(tp.data_type)}")
         return
     
-    if len(payload) != decoder.size:
-        print(f"seq={tp.seq_num} bad length: received {len(payload)}, expected {decoder.size}")
-        return
-    
     print(f"seq= {tp.seq_num}, tag= {hex(tp.data_type)}: {decoder(payload)}")
        # print(f"seq={tp.seq_num} type={hex(tp.data_type)} data_payload={tp.data_payload}")
        

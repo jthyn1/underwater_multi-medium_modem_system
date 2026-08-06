@@ -57,7 +57,7 @@ def txProtocol():
             )
         )
         pkt.show()
-        sendp(pkt, iface="eth0")
+        sendp(pkt, iface="enx00e04c2f1a80") #Tx device
         tx_queue.task_done()
 
 def main():

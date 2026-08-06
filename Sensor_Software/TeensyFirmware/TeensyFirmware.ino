@@ -23,8 +23,8 @@ float latitude = 0.0;
 float longitude = 0.0;
 double speed = 0.0;
 
-HardwareSerial &debugSerial = Serial8; // Output to serial port 8 (pins 34 & 35)
-// usb_serial_class &debugSerial = Serial; // Output to usb
+// HardwareSerial &debugSerial = Serial8; // Output to serial port 8 (pins 34 & 35)
+usb_serial_class &debugSerial = Serial; // Output to usb
 
 
 void setup() {
