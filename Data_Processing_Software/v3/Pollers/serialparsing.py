@@ -56,7 +56,7 @@ Format = '<hfffffcfcfh'
 def packetize(f: dataFormat) -> bytes:
     return SENSORS, struct.pack(Format, *astuple(f))
 
-def serialParse():
+def serialMain():
     value = readTeensy()
     timing = time.perf_counter()
     parsed = parse(next(value), int(time.perf_counter() - timing))
