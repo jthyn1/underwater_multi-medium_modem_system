@@ -2,6 +2,7 @@ import requests
 import json
 from .decoder import OPTICALSTATUS
 
+# Reads JSON data from the modem's API
 def readJson():
     try:
         while True:
@@ -13,7 +14,8 @@ def readJson():
                 print(f"Error: Received status code {response.status_code}")
     except requests.RequestException as e:
         print(f"Request error: {e}")
-    
+
+# Encodes JSON data into bytes for transmission
 def encodeJSON(data):
     return OPTICALSTATUS, json.dumps(data).encode('utf-8')
 
