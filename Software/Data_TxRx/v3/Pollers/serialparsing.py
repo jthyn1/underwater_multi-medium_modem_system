@@ -1,10 +1,8 @@
 #serialparsing.py
 import serial
 import struct
-import time
 from .decoder import SENSORS
 from dataclasses import dataclass, astuple
-
 
 @dataclass
 class dataFormat:

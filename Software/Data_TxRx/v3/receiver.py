@@ -1,14 +1,6 @@
 from scapy.all import sniff, Packet, Ether, IP, UDP, ShortField, XByteField, IntField, StrLenField, bind_layers
 from Pollers.decoder import DECODERS
-
-class TelemetryPacket(Packet):
-    name = "TelemetryPacket"
-    fields_desc = [
-        ShortField("seq_num", 0),
-        XByteField("data_type", 0),
-        IntField("payload_len", 0),
-        StrLenField("data_payload", b"", length_from=lambda pkt: pkt.payload_len),
-    ]
+from scapyWrapper import TelemetryPacket
 
 PORT = 5555
 bind_layers(UDP, TelemetryPacket, dport=PORT)
