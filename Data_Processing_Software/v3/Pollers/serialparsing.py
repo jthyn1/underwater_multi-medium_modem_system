@@ -27,7 +27,7 @@ def readTeensy():
         while True:
             if ser.in_waiting > 0:
                 line = ser.readline().decode('utf-8').rstrip() # Returns a str
-                yield(line)
+                return line
     except serial.SerialException as e:
         print(f"serial error:", {e})
     finally:
@@ -59,6 +59,6 @@ def packetize(f: dataFormat) -> bytes:
 def serialMain():
     value = readTeensy()
     timing = time.perf_counter()
-    parsed = parse(next(value), int(time.perf_counter() - timing))
+    parsed = parse(value, int(time.perf_counter() - timing))
     sensorTag, packetized_sensor = packetize(parsed)
     yield sensorTag,packetized_sensor

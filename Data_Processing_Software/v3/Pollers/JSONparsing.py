@@ -8,7 +8,7 @@ def readJson():
             response = requests.get("http://192.168.102.101/api/status.json")
             if response.status_code == 200:
                 json_data = response.json()
-                yield(json_data)
+                return json_data
             else:
                 print(f"Error: Received status code {response.status_code}")
     except requests.RequestException as e:
@@ -19,5 +19,5 @@ def encodeJSON(data):
 
 def JSONmain():
     value = readJson()
-    opticalTag, encoded_data = encodeJSON(next(value))
-    yield opticalTag, encoded_data
+    encoded_data = encodeJSON(value)
+    yield encoded_data
