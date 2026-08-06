@@ -4,19 +4,17 @@ import struct
 
 DECODERS = {}
 
-def struct_decoder(format):
-    def decoder(data):
-        return struct.unpack(format, data)
-    decoder.size = struct.calcsize(format)
-    return decoder
-
+def serial_decoder(data):
+    from .serialparsing import dataFormat, getFormat
+    def serial_return(nested_data: bytes) -> dataFormat:
+        return dataFormat(*struct.unpack(getFormat(), nested_data))
+    return serial_return(data)
+    
 def json_decoder(data):
     return json.loads(data.decode('utf-8'))
-
-
 
 SENSORS = 0X01
 OPTICALSTATUS = 0X02
 
-DECODERS[SENSORS] = struct_decoder('<hfffffcfcf')
+DECODERS[SENSORS] = serial_decoder
 DECODERS[OPTICALSTATUS] = json_decoder

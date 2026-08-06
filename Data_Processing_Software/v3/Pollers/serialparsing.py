@@ -49,11 +49,12 @@ def parse(dataLine: str) -> dataFormat:
     return dataFormat(waterVal, tempVal, altiVal, pressureVal, depthVal, latVal, latDirVal, lonVal, lonDirVal, speedVal)
 
 # Struct format
-Format = '<hfffffcfcf'
+def getFormat() -> str:
+    return '<hfffffcfcf'
 
 # Packs data from dataFormat class into a struct
 def packetize(f: dataFormat) -> bytes:
-    return SENSORS, struct.pack(Format, *astuple(f))
+    return SENSORS, struct.pack(getFormat(), *astuple(f))
 
 def serialMain(line: str) -> tuple[int, bytes]:
     parsed = parse(line)
