@@ -27,7 +27,7 @@ def readTeensy():
         while True:
             if ser.in_waiting > 0:
                 line = ser.readline().decode('utf-8').rstrip() # Returns a str
-                yield(line)
+                return line
     except serial.SerialException as e:
         print(f"serial error:", {e})
     finally:
