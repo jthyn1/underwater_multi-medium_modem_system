@@ -19,5 +19,5 @@ def encodeJSON(data):
 
 def JSONmain():
     value = readJson()
-    encoded_data = encodeJSON(next(value))
-    yield encoded_data
+    opticalTag, encoded_data = encodeJSON(next(value))
+    yield opticalTag, encoded_data

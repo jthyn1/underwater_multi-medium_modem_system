@@ -60,5 +60,5 @@ def serialMain():
     value = readTeensy()
     timing = time.perf_counter()
     parsed = parse(next(value), int(time.perf_counter() - timing))
-    packetized_sensor = packetize(parsed)
-    yield(packetized_sensor)
+    sensorTag, packetized_sensor = packetize(parsed)
+    yield sensorTag,packetized_sensor
