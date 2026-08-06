@@ -1,15 +1,26 @@
 import requests
-import time 
+import json
+from .decoder import OPTICALSTATUS
 
-def main():
-
+def readJson():
     try:
         while True:
             response = requests.get("http://192.168.102.101/api/status.json")
-            print(response.json())
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print("Exiting...")
-        exit(0)
-if __name__ == "__main__":
-   main()
+            if response.status_code == 200:
+                json_data = response.json()
+                yield(json_data)
+            else:
+                print(f"Error: Received status code {response.status_code}")
+    except requests.RequestException as e:
+        print(f"Request error: {e}")
+    
+def encodeJSON(data):
+    return json.dumps(data).encode('utf-8')
+
+def JSONParse():
+    value = readJson()
+    encoded_data = encodeJSON(next(value))
+    yield encoded_data
+
+def JSONID():
+    return "dict"

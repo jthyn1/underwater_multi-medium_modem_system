@@ -1,5 +1,5 @@
 from scapy.all import sniff, Packet, Ether, IP, UDP, ShortField, XByteField, IntField, StrLenField, bind_layers
-from Poller.decoder import DECODERS
+from Pollers.decoder import DECODERS
 
 class TelemetryPacket(Packet):
     name = "TelemetryPacket"

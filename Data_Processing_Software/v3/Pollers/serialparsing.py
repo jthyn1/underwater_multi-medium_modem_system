@@ -1,9 +1,10 @@
 #serialparsing.py
 import serial
-import time
 import struct
-from collections import namedtuple
-from dataclasses import dataclass
+import time
+from .decoder import SENSORS
+from dataclasses import dataclass, astuple
+
 
 @dataclass
 class dataFormat:
@@ -46,11 +47,18 @@ def parse(dataLine: str, time: int) -> dataFormat:
     lonDirVal = tokens[8].encode('ascii')
     speedVal = float(tokens[9])
     timeVal = time
-    return dataFormat(waterVal, tempVal, pressureVal, altiVal, depthVal, latVal, latDirVal, lonVal, lonDirVal, speedVal, timeVal)
+    return dataFormat(waterVal, tempVal, altiVal, pressureVal, depthVal, latVal, latDirVal, lonVal, lonDirVal, speedVal, timeVal)
 
 # Struct format
 Format = '<hfffffcfcfh'
 
 # Packs data from dataFormat class into a struct
 def packetize(f: dataFormat) -> bytes:
-    return struct.pack(Format, f.waterVal, f.tempVal, f.pressureVal, f.altiVal, f.depthVal, f.latVal, f.latDirVal, f.lonVal, f.lonDirVal, f.speedVal, f.timeVal)
+    return SENSORS, struct.pack(Format, *astuple(f))
+
+def serialParse():
+    value = readTeensy()
+    timing = time.perf_counter()
+    parsed = parse(next(value), int(time.perf_counter() - timing))
+    packetized_sensor = packetize(parsed)
+    yield(packetized_sensor)
