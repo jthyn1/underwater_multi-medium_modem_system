@@ -4,7 +4,7 @@ from scapy.all import Packet, Ether, IP, UDP, ShortField, XByteField, IntField, 
 from scapy.all import bind_layers, sendp
 import Pollers.JSONparsing as JSONparsing
 import Pollers.serialparsing as serialparsing
-from Pollers.decoder import SENSORS, OPTICALSTATUS
+from Pollers.decoder import SENSORS, OPTICALSTATUS, TIME
 import queue
 import threading
 
@@ -30,6 +30,16 @@ def qSensor(q):
 def qJSON(q):
     while True:
         q.put(JSONparsing.JSONmain())
+        time.sleep(1)
+
+def timeEncoder():
+    time_data = time.time()
+    timeEncoded = str(time_data).encode('utf-8')
+    return TIME, timeEncoded
+
+def qTime(q):
+    while True:
+        q.put(timeEncoder())
         time.sleep(1)
 
 # Defines port # and transmission protocol
