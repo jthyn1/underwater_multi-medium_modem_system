@@ -14,7 +14,7 @@ def json_decoder(data):
     return json.loads(data.decode('utf-8'))
 
 def time_decoder(data):
-    return data
+    return data.decode('utf-8')
 
 SENSORS = 0X01
 OPTICALSTATUS = 0X02
@@ -22,3 +22,4 @@ TIME = 0X03
 
 DECODERS[SENSORS] = serial_decoder
 DECODERS[OPTICALSTATUS] = json_decoder
+DECODERS[TIME] = time_decoder
