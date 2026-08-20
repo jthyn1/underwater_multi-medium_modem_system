@@ -1,86 +1,102 @@
-#spool.py
-
 import sqlite3
-from dataclasses import asdict, astuple, dataclass
 import time
+from collections import defaultdict
+from queue import Queue, Empty
+
 import receiver
 
-# states of data
-ABSENT = 0
-IN_FLIGHT = 1
-RECEIVED = 2 # And acknowledged
-QUARANTINED = 3 # Tried and failed multiple times, separated from the rest of data for analysis
-
-conn = sqlite3.connect('spool.db')
-cur = conn.cursor()
-
-@dataclass
-class receiverSeq:
-    seq: int
-    acq_ns: int
-    mask: int
-    link: bytes
-    payload: bytes
-
-r = asdict(receiver.main())
-
+PENDING, IN_FLIGHT, RECEIVED, QUARANTINED = 0, 1, 2, 3
+MAX_ATTEMPTS = 5
+BATCH_MAX = 64
+BATCH_TIMEOUT = 0.5
+SWEEP_INTERVAL = 60.0
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS spool (
     id       INTEGER PRIMARY KEY AUTOINCREMENT,
-    acq_ns   INTEGER NOT NULL,      -- nanoseconds since epoch
-    ins_ns   INTEGER NOT NULL,      -- ns when stored on pi
-    mask     TEXT NOT NULL,
-    link     TEXT NOT NULL,
+    acq_ns   INTEGER NOT NULL,      -- ns since epoch, at acquisition
+    ins_ns   INTEGER NOT NULL,      -- ns when written to this pi
+    mask     INTEGER NOT NULL,
+    link     INTEGER NOT NULL,
     seq_num  INTEGER NOT NULL,
-    payload  BLOB NOT NULL,
+    payload  BLOB    NOT NULL,
     state    INTEGER NOT NULL DEFAULT 0,
     attempts INTEGER NOT NULL DEFAULT 0,
-    CHECK (state IN (0, 1, 2, 3))  -- check to ensure state is valid
+    CHECK (state IN (0, 1, 2, 3))
 ) STRICT;
 
-CREATE INDEX IF NOT EXISTS idx_pending ON reading(id) WHERE state = 0;
-
-SELECT id, acq_ns, mask, link, payload
-FROM spool
-WHERE state = 0 AND attempts < 5
-
-UPDATE spool SET state = 3 WHERE state = 0 AND attempts >= 5;  -- isolate 5+ retry queries
+CREATE INDEX IF NOT EXISTS idx_pending ON spool(id)
+    WHERE state = 0 AND attempts < 5;
 """
 
-PRAGMA_DEF = """
-PRAGMA journal_mode=WAL;
-PRAGMA synchronous=NORMAL;
-"""
+INSERT_SQL = (
+    "INSERT INTO spool "
+    "(acq_ns, ins_ns, mask, link, seq_num, payload, state, attempts) "
+    "VALUES (?, ?, ?, ?, ?, ?, 0, 0)"
+)
 
-def insPayload():
-    conn.execute(
-        "INSERT INTO spool (acq_ns, ins_ns, mask, link, seq_num, payload, state, attempts) "
-        "VALUES (?, ?, ?, ?, ?, ?, 0, 0)",
-        (
-            r["acq_ns"],
-            time.time_ns(),
-            r["mask"],
-            r["link"],
-            r["seq"],
-            r["payload"],
-        ),
-    )
-    conn.commit()
-    
+SELECT_PENDING_SQL = (
+    "SELECT id, acq_ns, mask, link, payload FROM spool "
+    "WHERE state = 0 AND attempts < ? ORDER BY id LIMIT ?"
+)
+
+QUARANTINE_SQL = "UPDATE spool SET state = 3 WHERE state = 0 AND attempts >= ?"
+
+
+def open_db(path="spool.db"):
+    conn = sqlite3.connect(path)
+    conn.execute("PRAGMA journal_mode=WAL")     # persistent, but harmless to repeat
+    conn.execute("PRAGMA synchronous=NORMAL")   # per-connection, must be set every time
+    conn.executescript(SCHEMA)
+    return conn
+
+
+def drain(q, max_n, timeout):
+    out = []
+    try:
+        out.append(q.get(timeout=timeout))
+    except Empty:
+        return out
+    while len(out) < max_n:
+        try:
+            out.append(q.get_nowait())
+        except Empty:
+            break
+    return out
 
 
 def main():
-    conn.executescript(PRAGMA_DEF)
-    conn.executescript(SCHEMA)
+    conn = open_db()
+    q = Queue(maxsize=1000)
+    stats = defaultdict(int)
+    sniffer = receiver.startSniff(q, stats)
+    last_sweep = time.monotonic()
+    try:
+        while True:
+            batch = drain(q, BATCH_MAX, BATCH_TIMEOUT)
+            if batch:
+                ins_ns = time.time_ns()
+                rows = [(acq_ns, ins_ns, mask, link, seq_num, payload)
+                        for (acq_ns, mask, link, seq_num, payload) in batch]
+                with conn:
+                    conn.executemany(INSERT_SQL, rows)
+                stats["rows_written"] += len(rows)
 
-    while True:
-        insPayload()
+            now = time.monotonic()
+            if now - last_sweep >= SWEEP_INTERVAL:
+                with conn:
+                    conn.execute(QUARANTINE_SQL, (MAX_ATTEMPTS,))
+                print(f"spool: {dict(stats)}", flush=True)
+                last_sweep = now
+    except KeyboardInterrupt:
+        pass
+    finally:
+        sniffer.stop()
+        conn.close()
 
-        
+
 if __name__ == "__main__":
-   main()
-
+    main()
 
 
 

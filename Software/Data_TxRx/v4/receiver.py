@@ -1,67 +1,33 @@
-from scapy.all import sniff, Packet, Ether, IP, UDP, ShortField, XByteField, IntField, StrLenField, bind_layers
-from Pollers.decoder import DECODERS
+from scapy.all import sniff, Packet, Ether, IP, UDP, ShortField, XByteField, IntField, StrLenField, bind_layers, AsyncSniffer, Raw
+from queue import Queue, Full
 from scapyWrapper import TelemetryPacket
-from dataclasses import asdict
-import struct
 
 PORT = 5555
 bind_layers(UDP, TelemetryPacket, dport=PORT)
 
-"""
-def handle_packet(pkt):
-    if TelemetryPacket not in pkt:
-        return
-    tp = pkt[TelemetryPacket]
-    payload = bytes(tp.data_payload)
+def handler(q: Queue, stats):
+    def handle(pkt):
+        if TelemetryPacket not in pkt:
+            stats["non_telemetry"] += 1
+            return
+        tp = pkt[TelemetryPacket]
+        if len(tp.data_payload) != tp.payload_len:
+            stats["short_frame"] += 1
+            return
+        if Raw in tp:
+            stats["long_frame"] += 1
+            return
+        try:
+            q.put_nowait((tp.acq_ns, tp.mask, tp.link, tp.seq_num, bytes(tp.data_payload)))
+        except Full:
+            stats["backpressure"] += 1
 
-    decoder = DECODERS.get(tp.data_type)
-    if decoder is None:
-        print(f"seq={tp.seq_num} unknown data type: {hex(tp.data_type)}")
-        return
-    
-    # print(f"seq= {tp.seq_num}, tag= {hex(tp.data_type)}: {decoder(payload)}")
-    return tp.seq_num, tp.data_type, decoder(payload)
-"""
+    return handle
 
-
-
-def read_payload(pkt):
-    if TelemetryPacket not in pkt:
-        return
-
-    tp = pkt[TelemetryPacket]
-
-    if len(tp.data_payload) != tp.payload_len:
-        print("Payload lengths don't match")
-
-    if len(tp.data_payload) or tp.payload_len > 20:
-        print("Payload length is larger than expected")
-
-    # Possibly more error detection here 
-
-    return tp
-    
-    '''
-    payload = tp.data_payload
-
-
-    slots = {}
-    i = 0
-
-    # Read the payload data
-    while i < len(payload):
-        tag, n = struct.unpack_from("<BH", payload, i)
-        i += 3 # Read past the 3 byte header
-        slots[tag] = payload[i:i + n]
-
-    return slots
-    '''
-
-def main():
-    sniff(iface="eth0", prn=read_payload, filter=f"udp port {5555}")
-
-if __name__ == "__main__":
-   main()
+def startSniff(q, stats, port=5555):
+    sniffer = AsyncSniffer(iface="eth0", filter=f"udp port {port}", prn=handler(q,stats),store=False)
+    sniffer.start()
+    return sniffer
 
     
 

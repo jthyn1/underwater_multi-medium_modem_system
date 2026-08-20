@@ -1,0 +1,9 @@
+# Ignore .db files
+*.db
+*.db-wal
+*.db-shm
+
+# Ignore pycache files
+**/__pycache__/
+*.pyc
+
