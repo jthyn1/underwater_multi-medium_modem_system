@@ -27,7 +27,7 @@ r = asdict(receiver.main())
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS spool (
-    id       INTEGER PRIMARY KEY AUTOINCREMENT,  
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
     acq_ns   INTEGER NOT NULL,      -- nanoseconds since epoch
     ins_ns   INTEGER NOT NULL,      -- ns when stored on pi
     mask     TEXT NOT NULL,
@@ -36,8 +36,8 @@ CREATE TABLE IF NOT EXISTS spool (
     payload  BLOB NOT NULL,
     state    INTEGER NOT NULL DEFAULT 0,
     attempts INTEGER NOT NULL DEFAULT 0,
-    CHECK (state IN (0,1,2,3)),     -- check to ensure state is valid
-); STRICT
+    CHECK (state IN (0, 1, 2, 3))  -- check to ensure state is valid
+) STRICT;
 
 CREATE INDEX IF NOT EXISTS idx_pending ON reading(id) WHERE state = 0;
 
@@ -50,28 +50,34 @@ UPDATE spool SET state = 3 WHERE state = 0 AND attempts >= 5;  -- isolate 5+ ret
 
 PRAGMA_DEF = """
 PRAGMA journal_mode=WAL;
-PRAGMA synchronous=NORMAL;"
+PRAGMA synchronous=NORMAL;
 """
 
 def insPayload():
-    while True:
-        conn.executemany(
-            "INSERT INTO spool (id, acq_ns, ins_ns, mask, link, seq_num, payload, state, attempts)"
-            "VALUES (:id, :acq_ns, :ins_ns, :mask, :link, :seq_num, :payload, 0,0)"
-            {**asdict(r), "ins_ns": time.time()}
-)
+    conn.execute(
+        "INSERT INTO spool (acq_ns, ins_ns, mask, link, seq_num, payload, state, attempts) "
+        "VALUES (?, ?, ?, ?, ?, ?, 0, 0)",
+        (
+            r["acq_ns"],
+            time.time_ns(),
+            r["mask"],
+            r["link"],
+            r["seq"],
+            r["payload"],
+        ),
+    )
+    conn.commit()
+    
+
 
 def main():
-    conn.execute(PRAGMA_DEF)
-    conn.execute(SCHEMA)
-
-    insPayload()
+    conn.executescript(PRAGMA_DEF)
+    conn.executescript(SCHEMA)
 
     while True:
-        conn.commit()
+        insPayload()
 
-        time.sleep(5)
-
+        
 if __name__ == "__main__":
    main()
 
