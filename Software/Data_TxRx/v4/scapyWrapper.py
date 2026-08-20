@@ -23,7 +23,7 @@ class TelemetryPacket(Packet):
         LongField("acq_ns", 0),
         IntField("payload_len", 0),
         StrLenField("data_payload", b"", length_from=lambda pkt: pkt.payload_len),
-        XByteField("Link", 0),
+        XByteField("link", 0),
 
     ]
 
