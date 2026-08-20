@@ -42,7 +42,8 @@ def build_frame(seq, slots):
     for tag in sorted(slots):
         mask |= 1 << (tag - 1) # Defines mask that shows bitwise what data passed through and what got dropped
         body = slots[tag] # body based on data added to slots in framer
-        blocks.append(struct.pack(">BH", tag, len(body)+body)) # create the struct (len(body) enables header reading of when data starts/ends)
+        blocks.append(struct.pack(">BH", tag, len(body))) # create the struct header
+        blocks.append(body) # add the rest of the body
     return Frame(seq, acq_ns, mask, b"".join(blocks)) # joins all data as bytes into a single payload outlined by Frame class)
 
 
@@ -126,12 +127,12 @@ def txProtocol_UWO(frame_queue):
                 mask=frame.mask,
                 acq_ns=frame.acq_ns,
                 payload_len=len(frame.payload),
-                data_payload=frame.payload,
                 link=UWO,
+                data_payload=frame.payload,
             )
         )
         pkt.show()
-        sendp(pkt, iface="enx00e04c2f1a80") #Tx device
+        sendp(pkt, iface="eth0") #Tx device
         frame_queue.task_done()
 
 def main():

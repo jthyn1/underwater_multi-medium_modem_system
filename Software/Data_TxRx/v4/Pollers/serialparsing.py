@@ -19,7 +19,7 @@ class dataFormat:
 
 # Reads from teensy for sensor data
 def readTeensy(): 
-    ser = serial.Serial('/dev/ttyACM0', 115200, timeout=2)
+    ser = serial.Serial('/dev/ttyAMA0', 115200, timeout=2)
     try:
         while True:
             if ser.in_waiting > 0:
