@@ -84,6 +84,7 @@ def main():
 
             now = time.monotonic()
             if now - last_sweep >= SWEEP_INTERVAL:
+                print(f"spool: {dict(stats)}", flush=True)
                 with conn:
                     conn.execute(QUARANTINE_SQL, (MAX_ATTEMPTS,))
                 print(f"spool: {dict(stats)}", flush=True)
