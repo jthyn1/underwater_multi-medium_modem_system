@@ -2,7 +2,6 @@ import sqlite3
 import time
 from collections import defaultdict
 from queue import Queue, Empty
-
 import receiver
 
 PENDING, IN_FLIGHT, RECEIVED, QUARANTINED = 0, 1, 2, 3
@@ -38,6 +37,10 @@ INSERT_SQL = (
 SELECT_PENDING_SQL = (
     "SELECT id, acq_ns, mask, link, payload FROM spool "
     "WHERE state = 0 AND attempts < ? ORDER BY id LIMIT ?"
+)
+
+DELETE_RECEIVED_SQL = (
+
 )
 
 QUARANTINE_SQL = "UPDATE spool SET state = 3 WHERE state = 0 AND attempts >= ?"
@@ -93,8 +96,8 @@ def main():
         pass
     finally:
         sniffer.stop()
+        print(f"stats: {dict(stats)}", flush=True)
         conn.close()
-
 
 if __name__ == "__main__":
     main()

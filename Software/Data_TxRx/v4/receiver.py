@@ -28,6 +28,8 @@ def startSniff(q, stats, port=5555):
     sniffer = AsyncSniffer(iface="eth0", filter=f"udp port {port}", prn=handler(q,stats),store=False)
     sniffer.start()
     return sniffer
+    def readStats(stats):
+        return stats
 
     
 
