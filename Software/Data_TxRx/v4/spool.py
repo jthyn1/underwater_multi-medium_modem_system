@@ -15,9 +15,6 @@ CREATE TABLE IF NOT EXISTS spool (
     id       INTEGER PRIMARY KEY AUTOINCREMENT,
     acq_ns   INTEGER NOT NULL,      -- ns since epoch, at acquisition
     ins_ns   INTEGER NOT NULL,      -- ns when written to this pi
-    mask     INTEGER NOT NULL,
-    link     INTEGER NOT NULL,
-    seq_num  INTEGER NOT NULL,
     payload  BLOB    NOT NULL,
     state    INTEGER NOT NULL DEFAULT 0,
     attempts INTEGER NOT NULL DEFAULT 0,
@@ -30,12 +27,12 @@ CREATE INDEX IF NOT EXISTS idx_pending ON spool(id)
 
 INSERT_SQL = (
     "INSERT INTO spool "
-    "(acq_ns, ins_ns, mask, link, seq_num, payload, state, attempts) "
-    "VALUES (?, ?, ?, ?, ?, ?, 0, 0)"
+    "(acq_ns, ins_ns, payload, state, attempts) "
+    "VALUES (?, ?, ?, 0, 0)"
 )
 
 SELECT_PENDING_SQL = (
-    "SELECT id, acq_ns, mask, link, payload FROM spool "
+    "SELECT id, acq_ns, payload FROM spool "
     "WHERE state = 0 AND attempts < ? ORDER BY id LIMIT ?"
 )
 
@@ -79,8 +76,8 @@ def main():
             batch = drain(q, BATCH_MAX, BATCH_TIMEOUT)
             if batch:
                 ins_ns = time.time_ns()
-                rows = [(acq_ns, ins_ns, mask, link, seq_num, payload)
-                        for (acq_ns, mask, link, seq_num, payload) in batch]
+                rows = [(acq_ns, ins_ns, payload)
+                        for (acq_ns, payload) in batch]
                 with conn:
                     conn.executemany(INSERT_SQL, rows)
                 stats["rows_written"] += len(rows)

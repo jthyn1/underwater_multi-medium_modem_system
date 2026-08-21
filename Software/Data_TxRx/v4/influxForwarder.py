@@ -26,7 +26,7 @@ cur = conn.cursor()
 
 def claim_batch(conn, limit=50):
     rows = conn.execute(
-        "SELECT seq_num, frame FROM spool WHERE state = ? ORDER BY seq_num LIMIT ?",
+        "SELECT id, frame FROM spool WHERE state = ? ORDER BY id LIMIT ?",
         (PENDING, limit)).fetchall()
     if not rows:
         return None
@@ -34,7 +34,7 @@ def claim_batch(conn, limit=50):
     placeholders = ",".join("?" * len(seqs))
     conn.execute(
         f"UPDATE spool SET state = ?, attempts = attempts + 1 "
-        f"WHERE seq_num IN ({placeholders})",
+        f"WHERE id IN ({placeholders})",
         (IN_FLIGHT, *seqs))
     conn.commit()          # lease is durable BEFORE the batch goes on the queue
     return Batch(seqs, pack(rows))

@@ -22,8 +22,8 @@ class TelemetryPacket(Packet):
         XByteField("mask", 0),
         LongField("acq_ns", 0),
         IntField("payload_len", 0),
-        StrLenField("data_payload", b"", length_from=lambda pkt: pkt.payload_len),
         XByteField("link", 0),
+        StrLenField("data_payload", b"", length_from=lambda pkt: pkt.payload_len),
 
     ]
 
@@ -58,7 +58,6 @@ def qJSON(q):
     while True:
         q.put(JSONparsing.JSONmain())
         time.sleep(1)
-
 
 def framer(data_queue, frame_queue):
     
@@ -127,8 +126,8 @@ def txProtocol_UWO(frame_queue):
                 mask=frame.mask,
                 acq_ns=frame.acq_ns,
                 payload_len=len(frame.payload),
-                link=UWO,
                 data_payload=frame.payload,
+                link=UWO,
             )
         )
         pkt.show()

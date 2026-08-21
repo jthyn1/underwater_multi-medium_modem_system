@@ -18,7 +18,7 @@ def handler(q: Queue, stats):
             stats["long_frame"] += 1
             return
         try:
-            q.put_nowait((tp.acq_ns, tp.mask, tp.link, tp.seq_num, bytes(tp.data_payload)))
+            q.put_nowait(tp, tp.acq_ns)
         except Full:
             stats["backpressure"] += 1
 
@@ -28,10 +28,7 @@ def startSniff(q, stats, port=5555):
     sniffer = AsyncSniffer(iface="eth0", filter=f"udp port {port}", prn=handler(q,stats),store=False)
     sniffer.start()
     return sniffer
-    def readStats(stats):
-        return stats
 
-    
 
 
 #Receives the information passed through from pass.py
